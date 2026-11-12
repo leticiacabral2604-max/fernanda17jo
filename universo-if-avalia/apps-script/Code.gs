@@ -1,0 +1,28 @@
+const SHEETS={Projetos:['id','titulo','modalidade','area_tematica','data','inicio','fim','formato','local'],Codigos:['hash_codigo','habilitado'],Avaliacoes:['id_requisicao','hash_codigo','id_projeto','criatividade','clareza','relevancia','demonstracao','nota_final','timestamp','estado'],Configuracao:['chave','valor']};
+function doGet(e){const t=HtmlService.createTemplateFromFile('Index');t.projectId=e&&e.parameter?String(e.parameter.project||''):'';return t.evaluate().setTitle('Universo IF Avalia').addMetaTag('viewport','width=device-width, initial-scale=1');}
+function setupUniverso_(){const ss=SpreadsheetApp.getActive();Object.keys(SHEETS).forEach(n=>{let s=ss.getSheetByName(n);if(!s)s=ss.insertSheet(n);if(s.getLastRow()===0)s.getRange(1,1,1,SHEETS[n].length).setValues([SHEETS[n]]);});const ps=ss.getSheetByName('Projetos');if(ps.getLastRow()<2){const p=getCatalogData_().projetos.map(x=>[x.id,x.titulo,x.modalidade,x.area_tematica,x.data,x.inicio,x.fim,x.formato,x.local]);ps.getRange(2,1,p.length,p[0].length).setValues(p);}const cs=ss.getSheetByName('Configuracao');if(cs.getLastRow()<2)cs.getRange(2,1,4,2).setValues([['status','FECHADO'],['minimo_ranking','5'],['catalogo_versao','v1.0'],['atualizado_em',new Date().toISOString()]]);return 'Estrutura conferida; '+(ps.getLastRow()-1)+' projetos.';}
+function registerTokenHash_(hash){if(!hash||!/^[a-f0-9]{64}$/i.test(hash))throw new Error('Informe somente hash SHA-256 hexadecimal.');const s=SpreadsheetApp.getActive().getSheetByName('Codigos');s.appendRow([hash.toLowerCase(),true]);return 'Hash cadastrado.';}
+function setVotingStatus_(status){if(!['ABERTO','FECHADO'].includes(status))throw new Error('Status inválido.');const s=SpreadsheetApp.getActive().getSheetByName('Configuracao');const v=s.getDataRange().getValues();for(let i=1;i<v.length;i++)if(v[i][0]==='status'){s.getRange(i+1,2).setValue(status);return status;}throw new Error('Execute setupUniverso_ primeiro.');}
+function getProjects(){const s=SpreadsheetApp.getActive().getSheetByName('Projetos');return s.getLastRow()<2?[]:s.getRange(2,1,s.getLastRow()-1,9).getValues().map(r=>({id:r[0],titulo:r[1],modalidade:r[2],area_tematica:r[3],data:r[4],inicio:r[5],fim:r[6],formato:r[7],local:r[8]}));}
+function submitEvaluation(p){
+ if(!p||typeof p.token!=='string'||p.token.length<20||p.token.length>256)throw new Error('Código inválido.');
+ if(!/^(NAC|EXT)-\d{3}$/.test(p.projectId||''))throw new Error('Projeto inválido.');
+ if(!Array.isArray(p.scores)||p.scores.length!==4||!p.scores.every(n=>Number.isInteger(n)&&n>=1&&n<=5))throw new Error('Informe quatro notas inteiras entre 1 e 5.');
+ if(!/^[a-f0-9-]{20,80}$/i.test(p.requestId||''))throw new Error('Identificador de requisição inválido.');
+ const hash=Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,p.token,Utilities.Charset.UTF_8).map(b=>(b<0?b+256:b).toString(16).padStart(2,'0')).join('');p.token='';
+ const lock=LockService.getScriptLock();if(!lock.tryLock(15000))throw new Error('Sistema ocupado. Tente novamente.');
+ try{
+  const ss=SpreadsheetApp.getActive(),s=ss.getSheetByName('Avaliacoes'),rows=s.getDataRange().getValues(),old=rows.slice(1).find(r=>r[0]===p.requestId);
+  if(old){if(old[1]===hash&&old[2]===p.projectId&&old[9]==='VALIDA')return{ok:true,receipt:p.requestId,retry:true,score:Number(old[7])};throw new Error('Identificador já utilizado.');}
+  const cfg=ss.getSheetByName('Configuracao').getDataRange().getValues();if(cfg.find(r=>r[0]==='status')?.[1]!=='ABERTO')throw new Error('Avaliação fechada.');
+  const cache=CacheService.getScriptCache(),key='rate:'+hash,hits=Number(cache.get(key)||0);if(hits>=20)throw new Error('Limite temporário de tentativas atingido. Tente mais tarde.');cache.put(key,String(hits+1),3600);
+  const codes=ss.getSheetByName('Codigos').getDataRange().getValues();if(!codes.slice(1).some(r=>String(r[0]).toLowerCase()===hash&&r[1]===true))throw new Error('Código não autorizado.');
+  if(!getProjects().some(x=>x.id===p.projectId))throw new Error('Projeto inexistente.');
+  if(rows.slice(1).some(r=>r[1]===hash&&r[2]===p.projectId&&r[9]==='VALIDA'))throw new Error('Este código já avaliou este projeto.');
+  const score=+(p.scores[0]*.3+p.scores[1]*.3+p.scores[2]*.25+p.scores[3]*.15).toFixed(2);
+  s.appendRow([p.requestId,hash,p.projectId,...p.scores,score,new Date().toISOString(),'VALIDA']);
+  return{ok:true,receipt:p.requestId,retry:false,score};
+ }finally{lock.releaseLock();}
+}
+
+function getPublicRanking(modality){if(!['Mostra Nacional','Mostra de Extensão'].includes(modality))throw new Error('Modalidade inválida.');const ss=SpreadsheetApp.getActive(),projects=getProjects().filter(p=>p.modalidade===modality),min=Number(ss.getSheetByName('Configuracao').getDataRange().getValues().find(r=>r[0]==='minimo_ranking')?.[1]||5),s=ss.getSheetByName('Avaliacoes'),rows=s.getLastRow()>1?s.getRange(2,1,s.getLastRow()-1,10).getValues():[],result=projects.map(p=>{const v=rows.filter(r=>r[2]===p.id&&r[9]==='VALIDA'),n=v.length,avg=i=>n?+(v.reduce((a,r)=>a+Number(r[i]),0)/n).toFixed(2):null;return{id:p.id,titulo:p.titulo,quantidade:n,media:n?+(v.reduce((a,r)=>a+Number(r[7]),0)/n).toFixed(2):null,criterios:[avg(3),avg(4),avg(5),avg(6)],status:n<min?'AGUARDANDO_AMOSTRA':'CLASSIFICADO'};});result.sort((a,b)=>{if(a.status!==b.status)return a.status==='CLASSIFICADO'?-1:1;if(a.media!==b.media)return (b.media||0)-(a.media||0);return a.titulo.localeCompare(b.titulo,'pt-BR');});let pos=0;result.forEach(r=>{if(r.status==='CLASSIFICADO')r.posicao=++pos;});const projectIds=new Set(projects.map(p=>p.id));const latest=rows.filter(r=>r[9]==='VALIDA'&&projectIds.has(r[2])).map(r=>r[8]).sort().pop()||null;return{modalidade,atualizadoEm:latest,projetos:result};}
