@@ -1,5 +1,10 @@
 name: Publicar Universo IF Avalia no GitHub Pages
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'universo-if-avalia/**'
+      - '.github/workflows/pages.yml'
   workflow_dispatch:
 permissions:
   contents: read
