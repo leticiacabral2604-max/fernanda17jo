@@ -17,6 +17,10 @@
 - Votação foi devolvida ao estado FECHADO após os testes.
 - CI do pull request #1 passou antes da integração; 10 testes automatizados foram registrados no histórico da PR.
 
+## Teste manual em celular (relato da responsável, 14/11/2026)
+- A responsável confirmou que o site abriu e funcionou no celular, incluindo a navegação solicitada pelo roteiro de teste.
+- Modelo do aparelho, navegador, resolução e evidências de acessibilidade não foram registrados; isso não equivale à validação sistemática em múltiplos dispositivos.
+
 ## Testes ainda não comprovados
 - Mesmo código autorizado em **dois projetos diferentes**, com confirmação de dois recibos e linhas distintas.
 - Fluxo completo com token inválido enquanto a votação está ABERTA; testar apenas em ambiente controlado.
