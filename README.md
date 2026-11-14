@@ -1,10 +1,32 @@
-# fernanda17jo
+# Universo IF Avalia
 
-Repositório da equipe. O MVP **Universo IF Avalia** está em desenvolvimento na pasta [universo-if-avalia](./universo-if-avalia/).
+Aplicação web educativa desenvolvida como trabalho de Informática, destinada à avaliação popular dos 46 projetos do Universo IF 2026.
 
-- [Aplicação e documentação](./universo-if-avalia/README.md)
-- [Configuração do Google Apps Script + Sheets](./universo-if-avalia/docs/CONFIGURAR_GOOGLE.md)
+**Acessar o aplicativo:** https://leticiacabral2604-max.github.io/fernanda17jo/
+
+## Funcionalidades
+- Catálogo de 46 projetos: 24 da Mostra Nacional e 22 da Mostra de Extensão.
+- Pesquisa por título e filtros por modalidade, área temática e data.
+- Páginas com detalhes dos projetos.
+- Avaliação por código individual, com quatro critérios e notas ponderadas.
+- Bloqueio de avaliações repetidas do mesmo projeto.
+- Ranking público separado por modalidade, com classificação a partir de cinco avaliações válidas.
+
+## Tecnologias
+React, Vite, TypeScript, GitHub Pages, Google Apps Script e Google Sheets.
+
+## Situação do desenvolvimento
+- Aplicação publicada no GitHub Pages.
+- Planilha privada criada e integrada ao Google Apps Script.
+- Testes iniciais de avaliação e ranking realizados.
+- Votação atualmente fechada.
+- Revisão final de qualidade e documentação ainda em andamento.
+
+## Observação
+Este sistema é um protótipo acadêmico e não representa votação, julgamento ou premiação oficial do Universo IF.
+
+## Arquivos e documentação
+- [Código da aplicação e instruções](./universo-if-avalia/README.md)
+- [Configuração Google Apps Script + Sheets](./universo-if-avalia/docs/CONFIGURAR_GOOGLE.md)
 - [Plano de testes e QA](./universo-if-avalia/docs/TESTES_E_QA.md)
-- [Pull request para revisão](https://github.com/leticiacabral2604-max/fernanda17jo/pull/1)
-
-A branch de trabalho é feat/universo-if-avalia-mvp. O GitHub Pages foi preparado para publicação manual via Actions; não foi publicado. A planilha permanece por criar e a votação fechada.
+- [Histórico da integração do MVP (PR #1)](https://github.com/leticiacabral2604-max/fernanda17jo/pull/1)
