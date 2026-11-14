@@ -1,7 +1,6 @@
 import {useEffect,useMemo,useState} from 'react';
 type Project={id:string;titulo:string;modalidade:string;area_tematica:string;data:string;inicio:string;fim:string;formato:string;local:string};
 const base=import.meta.env.BASE_URL;
-const scriptUrl=import.meta.env.VITE_APPS_SCRIPT_URL||'';
 const norm=(s:string)=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR').trim();
 export default function App(){const [items,setItems]=useState<Project[]>([]);const [error,setError]=useState('');const [q,Sq]=useState('');const [mode,Sm]=useState('');const [area,Sa]=useState('');const [day,Sd]=useState('');const [hash,Sh]=useState(location.hash);
 useEffect(()=>{const f=()=>Sh(location.hash);addEventListener('hashchange',f);return()=>removeEventListener('hashchange',f)},[]);
