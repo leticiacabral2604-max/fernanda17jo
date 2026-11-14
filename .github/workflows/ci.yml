@@ -1,0 +1,25 @@
+name: Universo IF Avalia CI
+on:
+  pull_request:
+    paths: ['universo-if-avalia/**']
+  push:
+    branches: ['feat/**']
+    paths: ['universo-if-avalia/**']
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: universo-if-avalia
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
